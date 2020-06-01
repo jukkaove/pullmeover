@@ -132,6 +132,8 @@ namespace PullMeOver
                         state = CopStates.Follow;
                         Function.Call(Hash._TASK_VEHICLE_FOLLOW, copped, copveh, playerVehicle.Handle, 100, 0, 5+ stopdistance);
                     }
+
+                    //Wait before cop exits vehicle
                     else if (dist < 8 + stopdistance && playerVehicle.Speed < 1 && copveh.Speed < 2)
                     {
                         int tticks = 0; ;
@@ -158,7 +160,7 @@ namespace PullMeOver
                         break;
                     }
 
-                    //Plays megaphone sounds on interval
+                    //Plays megaphone speech on interval
                     if (dist < 30 && ticks % 40 == 0)
                     {
                         if (ticks >= 160)
@@ -178,24 +180,28 @@ namespace PullMeOver
                         }
                     }
                 }
-
+                //Give up pursuit
                 else if (dist > 350)
                     break;
 
                 Wait(0);
             }
-
-
+            //Ticket the player
             if (ticket)
                 TicketTime(copveh, copped);
+
+            //Player left his vehicle
             else if (eventstate == EventState.Locate)
                 SendCops();
+
+            //Another cop was closer
             else if (changecop)
             {
                 EndEvent(true);
                 SetChase();
             }
 
+            //Player evaded pull over
             else
             {
                 if (wasblipped)

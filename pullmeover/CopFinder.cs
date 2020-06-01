@@ -14,7 +14,6 @@ namespace PullMeOver
         List<Ped> potentialcops = new List<Ped>();
         internal static void FindCops()
         {
-            //UI.ShowSubtitle("copfind", 500);
             for (int i = 0; i < coplist.Count; i++)
             {
                 if (!coplist[i].Exists())

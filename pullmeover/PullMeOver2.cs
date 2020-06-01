@@ -133,15 +133,13 @@ namespace PullMeOver
         {
             Tick += OnTick;
             KeyDown += OnKeyDown;
-            //KeyUp += OnKeyUp;
             Aborted += OnAborted;
             Interval = 5;
             ticks = 0;
-           // violationchecktime = DateTime.Now.AddMilliseconds(500);
+
             config = ScriptSettings.Load("scripts/PullMeOver.ini");
             scriptenabled = config.GetValue<bool>("Settings", "Enabled", true);
             enablescript = config.GetValue<Keys>("Settings", "Key", Keys.F11);
-            //enablescriptmodifier = config.GetValue<Keys>("Settings", "Modifier key", Keys.Shift);
             wantedspeedlimit = config.GetValue<int>("Settings", "Exceed speed limit by", 50);
             range = config.GetValue<int>("Settings", "Range", 75);
             redlight = config.GetValue<bool>("Violations", "Running a red light", true);
@@ -224,17 +222,17 @@ namespace PullMeOver
 
                 for (int i = 0; i < bliplist.Count; i++)
                 {
-                    if (bliplist[i].IsVoided())
+                    if (bliplist[i].HasVoided())
                         bliplist.Remove(bliplist[i]);
                 }               
                 for (int i = 0; i < recordlist.Count; i++)
                 {
-                    if (recordlist[i].Rauennut())
+                    if (recordlist[i].HasVoided())
                         recordlist.Remove(recordlist[i]);
                 }
                 for (int i = 0; i < felonylist.Count; i++)
                 {
-                    if (felonylist[i].Rauennut())
+                    if (felonylist[i].HasVoided())
                         felonylist.Remove(felonylist[i]);
                 }
                 
@@ -255,7 +253,7 @@ namespace PullMeOver
                     if (witnesslist[i].ped.IsDead)
                         witnesslist[i].ped.CurrentBlip.Remove();
 
-                    if (witnesslist[i].IsVoided())
+                    if (witnesslist[i].HasVoided())
                     {
                         if (witnesslist[i].ped.IsAlive)
                         {
@@ -321,25 +319,7 @@ namespace PullMeOver
         }
         void OnKeyDown(object sender, KeyEventArgs e)
         {
-            
-            /*if (e.KeyCode == enablescript && !keyupped)
-            {
-                /*keycount++;
-                if (keycount >= 2)
-                {
-                    keyupped = true;
-                    scriptenabled = !scriptenabled;
-                    if (scriptenabled)
-                        UI.Notify("PullMeOver ~g~ENABLED");
-                    else
-                        UI.Notify("PullMeOver ~r~DISABLED");
-                    keycount = 0;
-                }
-            }
-            if (e.Shift && e.KeyCode == enablescript)
-            {
-                
-            }*/
+
         }
 
         void SetChase()
@@ -512,7 +492,7 @@ namespace PullMeOver
         {
             finalstop = Game.Player.Character.Position;
             // SendCops();
-            if (OdotusLooppi(2))
+            if (WaitingLoop(2))
                 return;
 
             copveh.LockStatus = VehicleLockStatus.Locked;
@@ -525,13 +505,13 @@ namespace PullMeOver
             World.SetRelationshipBetweenGroups(Relationship.Hate, copped.RelationshipGroup, Game.Player.Character.RelationshipGroup);
             World.SetRelationshipBetweenGroups(Relationship.Hate, Game.Player.Character.RelationshipGroup, copped.RelationshipGroup);
 
-            if (OdotusLooppi(1))
+            if (WaitingLoop(1))
                 return;
             copped.Task.AimAt(Game.Player.Character, -1);
             Function.Call(Hash._PLAY_AMBIENT_SPEECH2, copped, "CHALLENGE_THREATEN", "SPEECH_PARAMS_SHOUTED_CLEAR");
 
             UI.ShowSubtitle("~o~Do not move!", 8000);
-            if (OdotusLooppi(10))
+            if (WaitingLoop(10))
                 return;
 
             Vector3 playpos = StoppedPlayerPostion();
@@ -566,7 +546,7 @@ namespace PullMeOver
 
             copped.Weapons.Give(WeaponHash.StunGun, 1, true, true);
             Function.Call(Hash.TASK_ARREST_PED, copped, Game.Player.Character);
-            if (OdotusLooppi(4))
+            if (WaitingLoop(4))
                 return;
             EndEvent(false);
         }
@@ -656,7 +636,7 @@ namespace PullMeOver
                 Wait(0);
             }
 
-            if (OdotusLooppi(1))
+            if (WaitingLoop(1))
                 return;
             bool arrest = false;
 
@@ -671,14 +651,14 @@ namespace PullMeOver
             {
                 Function.Call(Hash._PLAY_AMBIENT_SPEECH2, Game.Player.Character, "GENERIC_HOWS_IT_GOING", "SPEECH_PARAMS_STANDARD");
 
-                if (OdotusLooppi(1))
+                if (WaitingLoop(1))
                     return;
 
                 Function.Call(Hash._PLAY_AMBIENT_SPEECH2, copped, "KIFFLOM_GREET", "SPEECH_PARAMS_FORCE");
                 Function.Call(Hash.TASK_START_SCENARIO_AT_POSITION, copped, "CODE_HUMAN_MEDIC_TIME_OF_DEATH", copped.Position.X,
                     copped.Position.Y, copped.Position.Z, copped.Heading, offences.Count - 1 * 8000, false, false);
 
-                if (OdotusLooppi(2))
+                if (WaitingLoop(2))
                     return;
 
                 for (int i = 0; i < offences.Count; i++)
@@ -781,7 +761,7 @@ namespace PullMeOver
                          Spiikki("ticket");
                      }*/
 
-                    if (OdotusLooppi(6))
+                    if (WaitingLoop(6))
                         break;
 
                     if (i != offences.Count - 1 || isevasionvehicle || recordlist.Count >= settingmaxviolations || felonylist.Count > 0)
@@ -789,7 +769,7 @@ namespace PullMeOver
                         if (language != 7)
                             UI.ShowSubtitle(" Also...", 8000);
 
-                        if (OdotusLooppi(4))
+                        if (WaitingLoop(4))
                             break;
                     }
                 }
@@ -802,7 +782,7 @@ namespace PullMeOver
                     UI.ShowSubtitle(" ~r~You shouldn't run from the police. This vehicle was used in a felony evasion", 8000);
 
                 evasionlist.Remove(playerVehicle);
-                if (OdotusLooppi(6))
+                if (WaitingLoop(6))
                     return;
             }
             else if (recordlist.Count >= settingmaxviolations || felonylist.Count > 0)
@@ -810,11 +790,11 @@ namespace PullMeOver
                 if (language != 7)
                     UI.ShowSubtitle(" ~r~You are driving on suspended license", 8000);
 
-                if (OdotusLooppi(6))
+                if (WaitingLoop(6))
                     return;
             }
 
-            LisaaRecordiin(olkm);
+            AddToRecord(olkm);
             if ((isevasionvehicle && settinglicensesuspension) || (licensesuspended && settinglicensesuspension))
             {
                 felonylist.Add(new Record(DateTime.Now.AddMinutes(settingexpireminutes)));
@@ -825,16 +805,11 @@ namespace PullMeOver
                 licensesuspended = true;
             }
             ticks = 0;
-            /* if (arrest)
-             {
-                 
-                 EndEvent();
-             }*/
 
             if (Function.Call<bool>(Hash.IS_PED_USING_ANY_SCENARIO, copped))
             {
                 copped.Task.ClearAll();
-                if (OdotusLooppi(3))
+                if (WaitingLoop(3))
                     return;
                 if ((recordlist.Count >= settingmaxviolations && settinglicensesuspension) || (felonylist.Count > 0 && settinglicensesuspension))
                 {
@@ -843,7 +818,7 @@ namespace PullMeOver
 
                 }
 
-                if (OdotusLooppi(4))
+                if (WaitingLoop(4))
                     return;
             }
 
@@ -949,7 +924,7 @@ namespace PullMeOver
                 else
                 {
                     UI.ShowSubtitle("Ваше транспортное средство было изъято", 3000);
-                    if (OdotusLooppi(3))
+                    if (WaitingLoop(3))
                         return;
                     UI.ShowSubtitle("Вам запрещено управлять данным ТС", 3000);
                 }
@@ -967,24 +942,6 @@ namespace PullMeOver
             EndEvent(false);
 
         }
-
-  /*      void Tekstitys(int id, int ms)
-        {
-            if(language != 7)
-                UI.ShowSubtitle(eng[id], ms);
-            else
-            {
-                switch (id)
-                {
-                    case 4:
-                        UI.ShowSubtitle("Ваше авто имеет сильные повреждения", 4000);
-                        if (OdotusLooppi(3))
-                            return;
-                        UI.ShowSubtitle("Пожалуйста, почините его.", 4000);
-                        break;
-                }
-            }
-        }*/
 
         void GetOut(Vector3 playpos, int olkm, int flkm, int rlkm)
         {
@@ -1012,7 +969,7 @@ namespace PullMeOver
                 else
                 {
                     UI.ShowSubtitle("~o~У вас слишком много нарушений ПДР", 4000);
-                    if (OdotusLooppi(4))
+                    if (WaitingLoop(4))
                         return;
                     UI.ShowSubtitle("~o~Я вынужден анулировать вашу лицензию водителя", 4000);
                 }
@@ -1024,7 +981,7 @@ namespace PullMeOver
                 else
                 {
                     UI.ShowSubtitle("~o~Ваша лицензия приостановлена", 4000);
-                    if (OdotusLooppi(4))
+                    if (WaitingLoop(4))
                         return;
                     UI.ShowSubtitle("~o~Пожалуйста, выйдите из машины", 4000);
                 }
@@ -1048,15 +1005,6 @@ namespace PullMeOver
                 Wait(0);
             }
         }
-
-       /* void OnKeyUp(object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == enablescript)
-            {
-                keyupped = false;
-                keycount = 0;
-            }
-        }*/
 
         void EndEvent(bool change)
         {
@@ -1102,6 +1050,7 @@ namespace PullMeOver
 
         }
 
+        //This was experimental and is not in use
         void TrackVehicle()
         {
             if (Game.Player.Character.IsJacking && settingstolenvehicle && !jacking && !Game.Player.Character.IsInVehicle())
@@ -1131,7 +1080,6 @@ namespace PullMeOver
                 for (int i = 0; i < vehp.Length; i++)
                 {
                     witnesslist.Add(new WitnessHandler(DateTime.Now.AddSeconds(25), vehp[i], jackedvehicle.GetHashCode()));
-                    //   vehp[i].Task.LeaveVehicle(vehp[i].CurrentVehicle, false);
                     vehp[i].Task.ReactAndFlee(Game.Player.Character);
                 }
                 witnesslist.Add(new WitnessHandler(DateTime.Now.AddSeconds(25), jackeddriver, jackedvehicle.GetHashCode()));
@@ -1239,12 +1187,8 @@ namespace PullMeOver
             if (scriptenabled)
                 TrackVehicle();
 
-           // if (Function.Call<int>(Hash.GET_PED_TYPE, Game.Player.Character) == 6)
-          //      return;
-
-            if (scriptenabled && Game.Player.WantedLevel == 0 /*&& violationchecktime < DateTime.Now*/)
+            if (scriptenabled && Game.Player.WantedLevel == 0)
             {
-                //violationchecktime = DateTime.Now.AddMilliseconds(100);
                 if (!Game.Player.Character.IsInVehicle())
                     return;
                 
@@ -1302,16 +1246,14 @@ namespace PullMeOver
                 }
                 sp1 = playerVehicle.Speed;
                 Wait(100);
-                // Wait(1);
+
                 float sp2 = playerVehicle.Speed;            
               
                 if (settingcolliding && (sp2 - sp1 < -5) || (playerVehicle.HasCollidedWithAnything && playerVehicle.Speed > 15))
                 {
-                    //UI.ShowSubtitle((sp2 - sp1) + "");
                     SetOffence("collision", range, true, true, true, true, false);
                 }
                 
-              //  UI.ShowSubtitle(sp1 + "");
                 Wait(1);
                 if (UsingMobilePhone())
                 {
@@ -1414,7 +1356,7 @@ namespace PullMeOver
             offences.Clear();
         }
 
-        void LisaaRecordiin(int lkm)
+        void AddToRecord(int lkm)
         {
             for (int i = 0; i < lkm; i++)
             {
@@ -1447,7 +1389,7 @@ namespace PullMeOver
             }
         }
 
-        bool OdotusLooppi(int secs)
+        bool WaitingLoop(int secs)
         {
 
             for (int i = 0; i < secs; i++)
@@ -1481,6 +1423,7 @@ namespace PullMeOver
             }
         }
 
+        //This is called when player leaves his vehicle while being chased and out of sight of the chaser
         void SendCops()
         {
             eventstate = EventState.None;
@@ -1488,7 +1431,7 @@ namespace PullMeOver
 
             fleevehicle = playerVehicle;
             fleevehicle.IsPersistent = true;
-            // DateTime endtime = DateTime.Now.AddSeconds(60);
+
             bool vehiclefound = false;
             int times = 0;
             while (Game.Player.WantedLevel == 0 && !Game.Player.Character.IsDead && times < 60)
@@ -1526,17 +1469,15 @@ namespace PullMeOver
             if (blips && copblip.Exists())
                 copblip.Remove();
             backuplist.Add(new CopsSentHandler(copped));
-          //  Ped[] copsi = World.GetNearbyPeds(playerVehicle.Position, 500);
 
             times = 0;
 
 
             while (times < 120)
             {
-                //FindCops();
                 if(times == 119)
                     Function.Call(Hash.FLASH_MINIMAP_DISPLAY);
-                if (Game.Player.WantedLevel > 0 || Game.Player.Character.IsDead/* || DateTime.Now > endtime*/)
+                if (Game.Player.WantedLevel > 0 || Game.Player.Character.IsDead)
                     break;
 
                 for (int i = 0; i < backuplist.Count; i++)
@@ -1577,7 +1518,7 @@ namespace PullMeOver
             this.old = old;
         }
 
-        public bool Rauennut()
+        public bool HasVoided()
         {
             int arresttime = Function.Call<int>(Hash.GET_TIME_SINCE_LAST_ARREST);
             int deathtime = Function.Call<int>(Hash.GET_TIME_SINCE_LAST_DEATH);
@@ -1603,7 +1544,7 @@ namespace PullMeOver
             this.autohash = autohash;
         }
 
-        public bool IsVoided()
+        public bool HasVoided()
         {
             if ((old < DateTime.Now))
                 return true;
@@ -1645,6 +1586,7 @@ namespace PullMeOver
             }
             float dist2 = Vector3.Distance(Game.Player.Character.Position, nextpos);
         }
+
         public void Check(bool end)
         {
             if (Vector3.Distance(PullMeOverMain.fleevehicle.Position, Game.Player.Character.Position) < 75)
@@ -1705,7 +1647,7 @@ namespace PullMeOver
             }
         }
 
-        public bool IsVoided()
+        public bool HasVoided()
         {
             if (ctimer < DateTime.Now)
             {
